@@ -1,29 +1,15 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base, SessionLocal
+from database import engine, Base
 import models, routers_auth, routers_trips, routers_reservations
-from security import get_password_hash
 import os
 
-# Crear tablas al iniciar
-Base.metadata.create_all(bind=engine)
-
-# Lógica de Auto-Admin (Solo si no existe)
-db = SessionLocal()
+# INSTRUCCIÓN CLAVE: Crea las tablas en Neon al arrancar
 try:
-    admin_exists = db.query(models.User).filter(models.User.phone == "5350000000").first()
-    if not admin_exists:
-        admin_user = models.User(
-            phone="5350000000",
-            email="admin@rutacuba.com",
-            full_name="Admin Sistema",
-            hashed_password=get_password_hash("admin"),
-            role="ADMIN"
-        )
-        db.add(admin_user)
-        db.commit()
-finally:
-    db.close()
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tablas sincronizadas con la base de datos.")
+except Exception as e:
+    print(f"❌ Error sincronizando tablas: {e}")
 
 app = FastAPI(title="RutaCuba API")
 
@@ -42,7 +28,4 @@ app.include_router(routers_trips.router, prefix="/admin")
 
 @app.get("/")
 def root():
-    return {"message": "RutaCuba API funcionando en Vercel", "docs": "/docs"}
-
-# Importante para Vercel
-export_app = app
+    return {"status": "online", "database": "connected"}
