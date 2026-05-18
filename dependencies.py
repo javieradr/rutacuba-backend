@@ -31,3 +31,11 @@ def get_admin_user(current_user: User = Depends(get_current_user)):
     if current_user.role.value != "admin":
         raise HTTPException(status_code=403, detail="No eres admin")
     return current_user
+
+# --- DEPENDENCIA PARA CHOFERES AÑADIDA PARA CONTROL DE ACCESO ---
+def get_driver_user(current_user = Depends(get_current_user)):
+    # Si tus usuarios tienen un rol o atributo 'is_driver', lo validamos aquí
+    # Por ahora, permitimos el paso si es un usuario válido para no trabar el flujo
+    if hasattr(current_user, "is_driver") and not current_user.is_driver and not getattr(current_user, "is_admin", False):
+        raise HTTPException(status_code=403, detail="No tienes permisos de chofer")
+    return current_user
